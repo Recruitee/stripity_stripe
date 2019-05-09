@@ -209,7 +209,8 @@ defmodule Stripe.API do
       |> add_default_options()
       |> add_pool_option()
 
-    response = HTTPotion.request(method, req_url, body: body, headers: req_headers)
+    response =
+      HTTPotion.request(method, req_url, body: body, headers: req_headers, timeout: 60_000)
 
     case response do
       %HTTPotion.Response{body: body, headers: headers, status_code: status} ->
@@ -238,7 +239,8 @@ defmodule Stripe.API do
       |> add_default_options()
       |> add_pool_option()
 
-    response = HTTPotion.request(method, req_url, body: body, headers: req_headers)
+    response =
+      HTTPotion.request(method, req_url, body: body, headers: req_headers, timeout: 60_000)
 
     case response do
       %HTTPotion.Response{body: body, headers: headers, status_code: status} ->
