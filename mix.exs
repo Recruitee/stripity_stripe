@@ -52,7 +52,7 @@ defmodule Stripe.Mixfile do
 
   defp apps(:test), do: [:bypass | apps()]
   defp apps(_), do: apps()
-  defp apps(), do: [:hackney, :logger, :poison, :uri_query]
+  defp apps(), do: [:httpotion, :logger, :poison, :uri_query]
 
   defp deps do
     [
@@ -61,7 +61,7 @@ defmodule Stripe.Mixfile do
       {:earmark, "~> 1.2.5", only: :dev},
       {:ex_doc, "~> 0.19.0", only: :dev},
       {:excoveralls, "~> 0.8.1", only: :test},
-      {:hackney, "~> 1.13"},
+      {:httpotion, "~> 3.1.0"},
       {:inch_ex, "~> 0.5", only: [:dev, :test]},
       {:mox, "~> 0.4", only: :test},
       {:poison, "~> 2.0 or ~> 3.0"},

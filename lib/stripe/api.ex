@@ -17,15 +17,8 @@ defmodule Stripe.API do
 
   @pool_name __MODULE__
   @api_version "2018-08-23"
-  @http_module Application.get_env(:stripity_stripe, :http_module) || :hackney
 
-  def supervisor_children do
-    if use_pool?() do
-      [:hackney_pool.child_spec(@pool_name, get_pool_options())]
-    else
-      []
-    end
-  end
+  def supervisor_children, do: []
 
   @spec get_pool_options() :: Keyword.t()
   defp get_pool_options() do
@@ -216,8 +209,15 @@ defmodule Stripe.API do
       |> add_default_options()
       |> add_pool_option()
 
-    @http_module.request(method, req_url, req_headers, req_body, req_opts)
-    |> handle_response()
+    response = HTTPotion.request(method, req_url, body: body, headers: req_headers)
+
+    case response do
+      %HTTPotion.Response{body: body, headers: headers, status_code: status} ->
+        handle_response({:ok, status, headers, body})
+
+      %HTTPotion.ErrorResponse{message: message} ->
+        handle_response({:error, message})
+    end
   end
 
   @spec perform_request(String.t(), method, body, headers, list) ::
@@ -238,8 +238,15 @@ defmodule Stripe.API do
       |> add_default_options()
       |> add_pool_option()
 
-    @http_module.request(method, req_url, req_headers, body, req_opts)
-    |> handle_response()
+    response = HTTPotion.request(method, req_url, body: body, headers: req_headers)
+
+    case response do
+      %HTTPotion.Response{body: body, headers: headers, status_code: status} ->
+        handle_response({:ok, status, headers, body})
+
+      %HTTPotion.ErrorResponse{message: message} ->
+        handle_response({:error, message})
+    end
   end
 
   @spec handle_response(http_success | http_failure) :: {:ok, map} | {:error, Stripe.Error.t()}
@@ -253,7 +260,7 @@ defmodule Stripe.API do
   end
 
   defp handle_response({:ok, status, headers, body}) when status >= 300 and status <= 599 do
-    request_id = headers |> List.keyfind("Request-Id", 0)
+    request_id = headers["Request-Id"]
 
     error =
       case Poison.decode(body) do
@@ -277,9 +284,7 @@ defmodule Stripe.API do
   end
 
   defp decompress_body(body, headers) do
-    headers_dict = :hackney_headers.new(headers)
-
-    case :hackney_headers.get_value("Content-Encoding", headers_dict) do
+    case headers["content-encoding"] do
       "gzip" -> :zlib.gunzip(body)
       "deflate" -> :zlib.unzip(body)
       _ -> body
